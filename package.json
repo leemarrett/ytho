@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
+  },
+  "render": {
+    "type": "worker"
   }
 } 

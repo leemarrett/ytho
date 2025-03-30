@@ -36,10 +36,9 @@ async function initializeServices() {
   try {
     await initializeServices();
     
-    // Start the app
-    const port = process.env.PORT || 3000;
-    await app.start(port);
-    console.log(`Server running on port ${port}`);
+    // Start the app in Socket Mode
+    await app.start();
+    console.log('⚡️ Bolt app is running!');
   } catch (error) {
     console.error('Error starting app:', error.message);
     process.exit(1);
