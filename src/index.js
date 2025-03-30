@@ -1,7 +1,6 @@
 require('dotenv').config();
 const { App } = require('@slack/bolt');
 const { initializeServices } = require('./services');
-const mongoose = require('mongoose');
 
 // Initialize Slack app
 const app = new App({
