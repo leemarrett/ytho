@@ -33,33 +33,31 @@ async function processYouTubeLink(url, videoId, postedBy, channelName) {
   try {
     // Clean the URL by removing any angle brackets
     const cleanUrl = url.replace(/[<>]/g, '');
-    console.log(`Processing YouTube link: ${cleanUrl}`);
     
     // Get the appropriate playlist ID based on channel
     const playlistId = getPlaylistIdForChannel(channelName);
-    console.log(`Using playlist: ${getPlaylistName(playlistId)}`);
+    console.log(`Adding video to ${getPlaylistName(playlistId)} playlist`);
     
     // Check if link was already processed
     const existingLink = await ProcessedLink.findOne({ url: cleanUrl });
     if (existingLink) {
-      console.log(`Link already processed: ${cleanUrl}`);
+      console.log('Video already processed');
       return;
     }
 
     // Check if video exists in playlist
     const exists = await checkVideoExists(videoId, playlistId);
     if (exists) {
-      console.log(`Video already exists in playlist: ${videoId}`);
+      console.log('Video already in playlist');
       return;
     }
 
     // Get video details
     const videoDetails = await getVideoDetails(videoId);
-    console.log(`Found video details: ${videoDetails.title}`);
+    console.log(`Found: ${videoDetails.title}`);
 
     // Add video to playlist
     await addVideoToPlaylist(videoId, playlistId);
-    console.log(`Added video to playlist: ${videoId}`);
 
     // Save to database
     await ProcessedLink.create({
@@ -79,7 +77,7 @@ async function processYouTubeLink(url, videoId, postedBy, channelName) {
 
     return { ...videoDetails, playlistId };
   } catch (error) {
-    console.error('Error processing YouTube link:', error);
+    console.error('Error processing video:', error.message);
     throw error;
   }
 }
@@ -89,30 +87,17 @@ async function setupSlackBot(app) {
   // Handle messages containing YouTube links
   app.message(async ({ message, say, client }) => {
     try {
-      console.log('Received message:', message);
-      
       // Skip messages from bots and message edits
       if (message.subtype === 'bot_message' || message.subtype === 'message_changed') {
-        console.log('Skipping bot message or message edit');
         return;
       }
 
       // Find YouTube links in message
       const text = message.text;
-      if (!text) {
-        console.log('No text in message');
-        return;
-      }
-
-      console.log('Message text:', text);
+      if (!text) return;
       
       const matches = text.match(new RegExp(YOUTUBE_PATTERNS.map(p => p.source).join('|'), 'g'));
-      console.log('Found matches:', matches);
-
-      if (!matches) {
-        console.log('No YouTube links found in message');
-        return;
-      }
+      if (!matches) return;
 
       // Get channel name
       const channelInfo = await client.conversations.info({ channel: message.channel });
@@ -121,15 +106,10 @@ async function setupSlackBot(app) {
       // Process each link
       for (const url of matches) {
         const videoId = extractVideoId(url);
-        if (!videoId) {
-          console.log('Could not extract video ID from URL:', url);
-          continue;
-        }
+        if (!videoId) continue;
 
-        console.log('Processing video ID:', videoId);
         const videoDetails = await processYouTubeLink(url, videoId, message.user, channelName);
         if (videoDetails) {
-          // Post to #ytho channel using the channel ID from environment variables
           try {
             await client.chat.postMessage({
               channel: process.env.SLACK_NOTIFICATION_CHANNEL_ID,
@@ -144,14 +124,13 @@ async function setupSlackBot(app) {
                 }
               ]
             });
-            console.log('Posted notification to channel:', process.env.SLACK_NOTIFICATION_CHANNEL_ID);
           } catch (error) {
-            console.error('Error posting to notification channel:', error);
+            console.error('Error posting notification:', error.message);
           }
         }
       }
     } catch (error) {
-      console.error('Error handling message:', error);
+      console.error('Error handling message:', error.message);
     }
   });
 }

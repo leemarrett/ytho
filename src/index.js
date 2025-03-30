@@ -16,7 +16,7 @@ async function initializeServices() {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('Connected to MongoDB successfully');
+    console.log('Connected to MongoDB');
 
     // Initialize YouTube client
     await setupYouTubeClient();
@@ -24,9 +24,9 @@ async function initializeServices() {
     // Setup Slack bot
     await setupSlackBot(app);
 
-    console.log('All services initialized successfully');
+    console.log('Services initialized');
   } catch (error) {
-    console.error('Error initializing services:', error);
+    console.error('Error initializing services:', error.message);
     process.exit(1);
   }
 }
@@ -39,9 +39,9 @@ async function initializeServices() {
     // Start the app
     const port = process.env.PORT || 3000;
     await app.start(port);
-    console.log(`Server is running on port ${port}`);
+    console.log(`Server running on port ${port}`);
   } catch (error) {
-    console.error('Error starting app:', error);
+    console.error('Error starting app:', error.message);
     process.exit(1);
   }
 })(); 

@@ -21,9 +21,9 @@ async function setupYouTubeClient() {
       auth: oauth2Client
     });
 
-    console.log('YouTube client initialized successfully');
+    console.log('YouTube client initialized');
   } catch (error) {
-    console.error('Error initializing YouTube client:', error);
+    console.error('Error initializing YouTube client:', error.message);
     throw error;
   }
 }
@@ -39,7 +39,7 @@ async function checkVideoExists(videoId, playlistId) {
 
     return response.data.items && response.data.items.length > 0;
   } catch (error) {
-    console.error('Error checking video existence:', error);
+    console.error('Error checking video existence:', error.message);
     throw error;
   }
 }
@@ -63,7 +63,7 @@ async function getVideoDetails(videoId) {
       publishedAt: video.publishedAt
     };
   } catch (error) {
-    console.error('Error getting video details:', error);
+    console.error('Error getting video details:', error.message);
     throw error;
   }
 }
@@ -84,7 +84,7 @@ async function addVideoToPlaylist(videoId, playlistId) {
       }
     });
   } catch (error) {
-    console.error('Error adding video to playlist:', error);
+    console.error('Error adding video to playlist:', error.message);
     throw error;
   }
 }
