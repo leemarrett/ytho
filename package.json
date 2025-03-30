@@ -10,6 +10,7 @@
   "dependencies": {
     "@slack/bolt": "^3.17.1",
     "dotenv": "^16.4.5",
+    "express": "^4.18.3",
     "googleapis": "^133.0.0",
     "mongoose": "^8.2.1"
   },
@@ -17,6 +18,12 @@
     "nodemon": "^3.1.0"
   },
   "render": {
-    "type": "worker"
+    "type": "worker",
+    "env": "node",
+    "buildCommand": "npm install",
+    "startCommand": "npm start",
+    "healthCheckPath": "/",
+    "healthCheckTimeout": 100,
+    "autoDeploy": true
   }
 } 
