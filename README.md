@@ -1,28 +1,31 @@
-# YouTube Link Bot for Slack
+# YTHO - YouTube Playlist Manager for Slack
 
-A Slack bot that monitors specified channels for YouTube links, checks if they exist on a designated YouTube channel, and if not, posts them to the YouTube channel. The bot also notifies a designated Slack channel when new YouTube content is added.
+A Slack bot that automatically adds YouTube videos to designated playlists based on the channel where they're posted.
 
 ## Features
 
 - Monitors Slack channels for YouTube links
-- Detects various YouTube URL formats
-- Checks if videos exist on the designated YouTube channel
-- Posts new videos to the YouTube channel
-- Sends notifications to a designated Slack channel
-
-## Prerequisites
-
-- Node.js (v18 or higher)
-- MongoDB
-- Slack workspace with admin access
-- YouTube channel with API access
-- Required API keys and tokens
+- Automatically adds videos to the appropriate playlist:
+  - Videos posted in channels with "music" in the name go to "Aucklandia Music" playlist
+  - All other videos go to "Aucklandia" playlist
+- Posts notifications in the #ytho channel when videos are added
+- Prevents duplicate videos from being added
+- Supports both public and private channels
 
 ## Setup
 
+### Prerequisites
+
+- Node.js 18 or higher
+- MongoDB database
+- Slack workspace with admin access
+- Google Cloud project with YouTube Data API enabled
+
+### Local Development
+
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/ytho.git
+   git clone https://github.com/leemarrett/ytho.git
    cd ytho
    ```
 
@@ -31,40 +34,55 @@ A Slack bot that monitors specified channels for YouTube links, checks if they e
    npm install
    ```
 
-3. Create a `.env` file:
-   ```bash
-   cp .env.example .env
+3. Create a `.env` file with the following variables:
+   ```
+   # Slack Configuration
+   SLACK_BOT_TOKEN=xoxb-your-bot-token
+   SLACK_APP_TOKEN=xapp-your-app-token
+   SLACK_NOTIFICATION_CHANNEL_ID=C...  # Channel ID for #ytho (starts with C)
+
+   # YouTube Configuration
+   YOUTUBE_CLIENT_ID=your-client-id
+   YOUTUBE_CLIENT_SECRET=your-client-secret
+   YOUTUBE_REFRESH_TOKEN=your-refresh-token
+   YOUTUBE_PLAYLIST_ID=your-playlist-id
+   YOUTUBE_MUSIC_PLAYLIST_ID=your-music-playlist-id
+
+   # MongoDB Configuration
+   MONGODB_URI=your-mongodb-uri
    ```
 
-4. Configure your environment variables in `.env`:
-   - Get your Slack Bot Token from your Slack App settings
-   - Get your YouTube API Key from Google Cloud Console
-   - Set up your MongoDB connection string
-   - Configure other required variables
-
-5. Start the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
-## Environment Variables
-
-See `.env.example` for all required environment variables. Make sure to set up your own values in the `.env` file.
-
-## Development
-
-- `npm run dev`: Start the development server with hot reload
-- `npm start`: Start the production server
-- `npm test`: Run tests
-
-## Deployment
-
-The application is designed to be deployed on Render. Follow these steps:
+### Deployment to Render
 
 1. Create a new Web Service on Render
 2. Connect your GitHub repository
-3. Configure environment variables in Render
-4. Deploy!
+3. Configure the service:
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+   - Environment Variables: Add all variables from your `.env` file
+   - Plan: Free tier is sufficient
+
+4. Deploy the service
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `SLACK_BOT_TOKEN` | Your Slack Bot User OAuth Token |
+| `SLACK_APP_TOKEN` | Your Slack App-Level Token with `connections:write` scope |
+| `SLACK_NOTIFICATION_CHANNEL_ID` | Channel ID where notifications will be posted |
+| `YOUTUBE_CLIENT_ID` | Google Cloud OAuth 2.0 Client ID |
+| `YOUTUBE_CLIENT_SECRET` | Google Cloud OAuth 2.0 Client Secret |
+| `YOUTUBE_REFRESH_TOKEN` | OAuth 2.0 Refresh Token for YouTube API |
+| `YOUTUBE_PLAYLIST_ID` | ID of the main playlist (Aucklandia) |
+| `YOUTUBE_MUSIC_PLAYLIST_ID` | ID of the music playlist (Aucklandia Music) |
+| `MONGODB_URI` | MongoDB connection string |
+| `PORT` | Port to run the server on (default: 3000) |
 
 ## Contributing
 
