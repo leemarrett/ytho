@@ -19,6 +19,18 @@ const app = new App({
     // Start the Slack app in Socket Mode
     await app.start();
     console.log('⚡️ Bolt app is running!');
+
+    // Check channel connections
+    const client = app.client;
+    const channels = ['C06QZJ4KX4P', 'C06QZJ4KX4Q']; // Add your channel IDs here
+    for (const channel of channels) {
+      try {
+        const result = await client.conversations.info({ channel });
+        console.log(`Connected to channel: ${result.channel.name}`);
+      } catch (error) {
+        console.error(`Error connecting to channel ${channel}:`, error.message);
+      }
+    }
   } catch (error) {
     console.error('Error starting app:', error.message);
     process.exit(1);
