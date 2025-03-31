@@ -77,7 +77,7 @@ const app = new App({
       } catch (error) {
         console.error(`Error connecting to channel ${channel}:`, error.message);
         if (error.data?.error === 'not_in_channel') {
-          console.log('Bot needs to be invited to the channel. Please use /invite @ytho2 in the channel.');
+          console.log('Bot needs to be invited to the channel. Please use /invite @ytho in the channel.');
         }
       }
     }
