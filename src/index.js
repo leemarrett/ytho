@@ -46,6 +46,8 @@ const app = new App({
       process.env.SLACK_MAIN_CHANNEL_ID
     ].filter(Boolean);
 
+    console.log('Attempting to connect to channels:', channels);
+
     for (const channel of channels) {
       try {
         // First try to get channel info
@@ -65,11 +67,29 @@ const app = new App({
           } catch (joinError) {
             console.error(`Error joining channel ${channel}:`, joinError.message);
           }
+        } else {
+          console.log(`Bot is already a member of channel: ${result.channel.name}`);
         }
+
+        // Test channel access by getting recent messages
+        const messages = await client.conversations.history({ channel, limit: 1 });
+        console.log(`Successfully accessed channel ${result.channel.name}, found ${messages.messages?.length || 0} messages`);
       } catch (error) {
         console.error(`Error connecting to channel ${channel}:`, error.message);
+        if (error.data?.error === 'not_in_channel') {
+          console.log('Bot needs to be invited to the channel. Please use /invite @ytho2 in the channel.');
+        }
       }
     }
+
+    // Test message event subscription
+    try {
+      const result = await client.apps.event.authorizations.list();
+      console.log('Event subscriptions:', result);
+    } catch (error) {
+      console.error('Error checking event subscriptions:', error.message);
+    }
+
   } catch (error) {
     console.error('Error starting app:', error.message);
     process.exit(1);
