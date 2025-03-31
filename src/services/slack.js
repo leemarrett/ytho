@@ -104,80 +104,18 @@ async function processYouTubeLink(url, videoId, postedBy, channelName) {
 async function setupSlackBot(app) {
   console.log('Setting up Slack bot...');
   
-  // Handle YouTube links in messages
+  // Handle ALL messages for debugging
   app.message(async ({ message, say, client }) => {
-    console.log('Received message event:', {
+    console.log('DEBUG: Received ANY message:', {
       type: message.type,
       subtype: message.subtype,
       text: message.text,
       user: message.user,
       channel: message.channel,
       ts: message.ts,
-      bot_id: message.bot_id
+      bot_id: message.bot_id,
+      raw: message
     });
-    
-    try {
-      // Skip messages from bots and message edits
-      if (message.subtype === 'bot_message' || message.subtype === 'message_changed') {
-        console.log('Skipping bot message or message edit');
-        return;
-      }
-
-      // Find YouTube links in message
-      const text = message.text;
-      if (!text) {
-        console.log('No text in message');
-        return;
-      }
-      
-      const matches = text.match(new RegExp(YOUTUBE_PATTERNS.map(p => p.source).join('|'), 'g'));
-      if (!matches) {
-        console.log('No YouTube links found in message');
-        return;
-      }
-
-      console.log('Found YouTube links:', matches);
-
-      // Get channel name
-      const channelInfo = await client.conversations.info({ channel: message.channel });
-      const channelName = channelInfo.channel.name;
-      console.log('Processing links in channel:', channelName);
-
-      // Process each link
-      for (const url of matches) {
-        console.log('Processing URL:', url);
-        const videoId = extractVideoId(url);
-        if (!videoId) {
-          console.log('Could not extract video ID from URL');
-          continue;
-        }
-
-        console.log('Extracted video ID:', videoId);
-        const videoDetails = await processYouTubeLink(url, videoId, message.user, channelName);
-        if (videoDetails) {
-          try {
-            await client.chat.postMessage({
-              channel: process.env.SLACK_NOTIFICATION_CHANNEL_ID,
-              text: `🎥 New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`,
-              blocks: [
-                {
-                  type: 'section',
-                  text: {
-                    type: 'mrkdwn',
-                    text: `🎥 New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`
-                  }
-                }
-              ]
-            });
-            console.log('Posted notification message');
-          } catch (error) {
-            console.error('Error posting notification:', error.message);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error handling message:', error.message);
-    }
   });
 
   console.log('Slack bot setup complete');
