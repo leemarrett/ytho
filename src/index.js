@@ -46,6 +46,11 @@ const app = new App({
       process.env.SLACK_MAIN_CHANNEL_ID
     ].filter(Boolean);
 
+    if (channels.length === 0) {
+      console.error('No channel IDs found in environment variables. Please set SLACK_MUSIC_CHANNEL_ID and/or SLACK_MAIN_CHANNEL_ID');
+      return;
+    }
+
     console.log('Attempting to connect to channels:', channels);
 
     for (const channel of channels) {
@@ -80,14 +85,6 @@ const app = new App({
           console.log('Bot needs to be invited to the channel. Please use /invite @ytho in the channel.');
         }
       }
-    }
-
-    // Test message event subscription
-    try {
-      const result = await client.apps.event.authorizations.list();
-      console.log('Event subscriptions:', result);
-    } catch (error) {
-      console.error('Error checking event subscriptions:', error.message);
     }
 
   } catch (error) {
