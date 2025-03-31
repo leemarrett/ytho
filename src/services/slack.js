@@ -116,6 +116,14 @@ async function setupSlackBot(app) {
       bot_id: message.bot_id,
       raw: message
     });
+
+    // Log the bot's token (first few characters only for security)
+    console.log('Bot token prefix:', process.env.SLACK_BOT_TOKEN?.substring(0, 10) + '...');
+  });
+
+  // Add a test event handler
+  app.event('message', async ({ event, say }) => {
+    console.log('DEBUG: Received message event:', event);
   });
 
   console.log('Slack bot setup complete');
