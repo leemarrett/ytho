@@ -105,18 +105,32 @@ async function setupSlackBot(app) {
   console.log('Setting up Slack bot...');
   
   // Handle YouTube links in messages
-  app.message(async ({ message, say }) => {
+  app.message(async ({ message, say, client }) => {
+    console.log('Received message event:', {
+      type: message.type,
+      subtype: message.subtype,
+      text: message.text,
+      user: message.user,
+      channel: message.channel,
+      ts: message.ts,
+      bot_id: message.bot_id
+    });
+    
     try {
-      console.log('Received message:', message.text);
-      
-      // Skip messages from the bot itself
-      if (message.bot_id) {
-        console.log('Skipping bot message');
+      // Skip messages from bots and message edits
+      if (message.subtype === 'bot_message' || message.subtype === 'message_changed') {
+        console.log('Skipping bot message or message edit');
         return;
       }
 
-      // Find YouTube links in the message
-      const matches = message.text.match(YOUTUBE_URL_PATTERN);
+      // Find YouTube links in message
+      const text = message.text;
+      if (!text) {
+        console.log('No text in message');
+        return;
+      }
+      
+      const matches = text.match(new RegExp(YOUTUBE_PATTERNS.map(p => p.source).join('|'), 'g'));
       if (!matches) {
         console.log('No YouTube links found in message');
         return;
@@ -124,70 +138,45 @@ async function setupSlackBot(app) {
 
       console.log('Found YouTube links:', matches);
 
-      // Process each YouTube link
-      for (const match of matches) {
-        const cleanUrl = cleanYouTubeUrl(match);
-        console.log('Processing URL:', cleanUrl);
-        
-        // Extract video ID
-        const videoId = cleanUrl.match(YOUTUBE_URL_PATTERN)[1];
+      // Get channel name
+      const channelInfo = await client.conversations.info({ channel: message.channel });
+      const channelName = channelInfo.channel.name;
+      console.log('Processing links in channel:', channelName);
+
+      // Process each link
+      for (const url of matches) {
+        console.log('Processing URL:', url);
+        const videoId = extractVideoId(url);
+        if (!videoId) {
+          console.log('Could not extract video ID from URL');
+          continue;
+        }
+
         console.log('Extracted video ID:', videoId);
-
-        // Check if video exists in database
-        const existingVideo = await Video.findOne({ videoId });
-        if (existingVideo) {
-          console.log('Video already processed:', videoId);
-          continue;
-        }
-
-        // Get video details
-        const videoDetails = await setupYouTubeClient().videos.list({
-          part: ['snippet'],
-          id: [videoId]
-        });
-
-        if (!videoDetails.data.items || videoDetails.data.items.length === 0) {
-          console.log('Video not found:', videoId);
-          continue;
-        }
-
-        const video = videoDetails.data.items[0];
-        console.log('Found video:', video.snippet.title);
-
-        // Determine which playlist to use based on channel
-        const playlistId = message.channel === 'C06QZJ4KX4P' 
-          ? process.env.YOUTUBE_MUSIC_PLAYLIST_ID 
-          : process.env.YOUTUBE_PLAYLIST_ID;
-
-        console.log('Using playlist:', getPlaylistName(playlistId));
-
-        // Add video to playlist
-        await setupYouTubeClient().playlistItems.insert({
-          part: ['snippet'],
-          requestBody: {
-            snippet: {
-              playlistId: playlistId,
-              resourceId: {
-                kind: 'youtube#video',
-                videoId: videoId
-              }
-            }
+        const videoDetails = await processYouTubeLink(url, videoId, message.user, channelName);
+        if (videoDetails) {
+          try {
+            await client.chat.postMessage({
+              channel: process.env.SLACK_NOTIFICATION_CHANNEL_ID,
+              text: `🎥 New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`,
+              blocks: [
+                {
+                  type: 'section',
+                  text: {
+                    type: 'mrkdwn',
+                    text: `🎥 New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`
+                  }
+                }
+              ]
+            });
+            console.log('Posted notification message');
+          } catch (error) {
+            console.error('Error posting notification:', error.message);
           }
-        });
-
-        // Save to database
-        await Video.create({
-          videoId,
-          title: video.snippet.title,
-          channelId: video.snippet.channelId,
-          channelTitle: video.snippet.channelTitle,
-          playlistId: playlistId
-        });
-
-        console.log('Added video to playlist:', video.snippet.title);
+        }
       }
     } catch (error) {
-      console.error('Error processing message:', error.message);
+      console.error('Error handling message:', error.message);
     }
   });
 
