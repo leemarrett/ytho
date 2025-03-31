@@ -7,7 +7,13 @@ const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   socketMode: true,
-  appToken: process.env.SLACK_APP_TOKEN
+  appToken: process.env.SLACK_APP_TOKEN,
+  // Add explicit event subscriptions
+  events: {
+    message: true,
+    message_changed: true,
+    message_deleted: true
+  }
 });
 
 // Start the app
