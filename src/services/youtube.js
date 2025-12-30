@@ -56,14 +56,23 @@ async function getVideoDetails(videoId) {
       throw new Error('Video not found');
     }
 
-    const video = response.data.items[0].snippet;
+    const video = response.data.items[0];
+    const snippet = video.snippet;
     return {
-      title: video.title,
-      description: video.description,
-      publishedAt: video.publishedAt
+      title: snippet.title,
+      description: snippet.description,
+      publishedAt: snippet.publishedAt,
+      categoryId: snippet.categoryId
     };
   } catch (error) {
     console.error('Error getting video details:', error.message);
+    if (error.code === 401 || error.message.includes('invalid_grant')) {
+      console.error('YouTube OAuth authentication failed. This usually means:');
+      console.error('1. The refresh token has expired or been revoked');
+      console.error('2. The refresh token is invalid or incorrect');
+      console.error('3. The OAuth client credentials don\'t match the refresh token');
+      console.error('Please check your YOUTUBE_REFRESH_TOKEN, YOUTUBE_CLIENT_ID, and YOUTUBE_CLIENT_SECRET in your .env file');
+    }
     throw error;
   }
 }

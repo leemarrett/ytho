@@ -21,23 +21,21 @@ function extractVideoId(url) {
   return null;
 }
 
-// Get playlist ID based on channel name
-function getPlaylistIdForChannel(channelName) {
-  // If the channel name contains "music", use the music playlist
+// Get playlist ID based on channel name and video category
+// Priority: 1) Channel name, 2) YouTube category
+function getPlaylistIdForChannel(channelName, videoCategoryId = null) {
+  // Priority 1: If the channel name contains "music", always use the music playlist
   if (channelName.toLowerCase().includes('music')) {
     return process.env.YOUTUBE_MUSIC_PLAYLIST_ID;
   }
-  // Otherwise use the main playlist
+  
+  // Priority 2: Check YouTube category (categoryId "10" is Music)
+  if (videoCategoryId === '10') {
+    return process.env.YOUTUBE_MUSIC_PLAYLIST_ID;
+  }
+  
+  // Default to main playlist
   return process.env.YOUTUBE_PLAYLIST_ID;
-}
-
-// Helper function to get playlist name
-function getPlaylistName(playlistId) {
-  const playlists = {
-    [process.env.YOUTUBE_PLAYLIST_ID]: 'Aucklandia',
-    [process.env.YOUTUBE_MUSIC_PLAYLIST_ID]: 'Aucklandia Music'
-  };
-  return playlists[playlistId] || 'Unknown';
 }
 
 // Helper function to clean YouTube URLs
@@ -52,10 +50,6 @@ async function processYouTubeLink(url, videoId, postedBy, channelName) {
     // Clean the URL by removing any angle brackets
     const cleanUrl = url.replace(/[<>]/g, '');
     
-    // Get the appropriate playlist ID based on channel
-    const playlistId = getPlaylistIdForChannel(channelName);
-    console.log(`Adding video to ${getPlaylistName(playlistId)} playlist`);
-    
     // Check if link was already processed
     const existingLink = await ProcessedLink.findOne({ url: cleanUrl });
     if (existingLink) {
@@ -63,16 +57,21 @@ async function processYouTubeLink(url, videoId, postedBy, channelName) {
       return;
     }
 
+    // Get video details first to check category
+    const videoDetails = await getVideoDetails(videoId);
+    console.log(`Found: ${videoDetails.title} (Category ID: ${videoDetails.categoryId})`);
+
+    // Get the appropriate playlist ID based on channel name and video category
+    const playlistId = getPlaylistIdForChannel(channelName, videoDetails.categoryId);
+    const playlistName = getPlaylistName(playlistId);
+    console.log(`Adding video to ${playlistName} playlist`);
+
     // Check if video exists in playlist
     const exists = await checkVideoExists(videoId, playlistId);
     if (exists) {
       console.log('Video already in playlist');
       return;
     }
-
-    // Get video details
-    const videoDetails = await getVideoDetails(videoId);
-    console.log(`Found: ${videoDetails.title}`);
 
     // Add video to playlist
     await addVideoToPlaylist(videoId, playlistId);
@@ -104,6 +103,18 @@ async function processYouTubeLink(url, videoId, postedBy, channelName) {
 async function setupSlackBot(app) {
   console.log('Setting up Slack bot...');
   
+  // Log all events for debugging
+  app.event('*', async ({ event, say }) => {
+    console.log('DEBUG: Received event:', {
+      type: event.type,
+      subtype: event.subtype,
+      user: event.user,
+      channel: event.channel,
+      text: event.text,
+      raw: event
+    });
+  });
+
   // Handle YouTube links in messages
   app.message(async ({ message, say, client }) => {
     console.log('DEBUG: Received message:', {
@@ -111,8 +122,14 @@ async function setupSlackBot(app) {
       subtype: message.subtype,
       text: message.text,
       user: message.user,
-      channel: message.channel
+      channel: message.channel,
+      ts: message.ts,
+      bot_id: message.bot_id,
+      raw: message
     });
+
+    // Log the bot's token (first few characters only for security)
+    console.log('Bot token prefix:', process.env.SLACK_BOT_TOKEN?.substring(0, 10) + '...');
     
     try {
       // Skip messages from bots and message edits

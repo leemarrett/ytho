@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { App } = require('@slack/bolt');
 const { initializeServices } = require('./services');
+const { setupSlackBot } = require('./services/slack');
 
 // Initialize Slack app
 const app = new App({
@@ -21,6 +22,9 @@ const app = new App({
   try {
     // Initialize all services
     await initializeServices();
+    
+    // Setup Slack bot message handlers
+    await setupSlackBot(app);
     
     // Start the Slack app in Socket Mode
     await app.start();

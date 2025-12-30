@@ -5,9 +5,10 @@ A Slack bot that automatically adds YouTube videos to designated playlists based
 ## Features
 
 - Monitors Slack channels for YouTube links
-- Automatically adds videos to the appropriate playlist:
-  - Videos posted in channels with "music" in the name go to "Aucklandia Music" playlist
-  - All other videos go to "Aucklandia" playlist
+- Automatically adds videos to the appropriate playlist using a hybrid detection system:
+  1. **Channel Name Priority**: Videos posted in channels with "music" in the name always go to "Aucklandia Music" playlist (regardless of video category)
+  2. **YouTube Category Detection**: For videos in other channels, automatically detects if the video is categorized as "Music" on YouTube and routes to "Aucklandia Music" playlist
+  3. **Default**: All other videos go to "Aucklandia" playlist
 - Posts notifications in the #ytho channel when videos are added
 - Prevents duplicate videos from being added
 - Supports both public and private channels
@@ -38,8 +39,13 @@ A Slack bot that automatically adds YouTube videos to designated playlists based
    ```
    # Slack Configuration
    SLACK_BOT_TOKEN=xoxb-your-bot-token
+   SLACK_SIGNING_SECRET=your-signing-secret
    SLACK_APP_TOKEN=xapp-your-app-token
    SLACK_NOTIFICATION_CHANNEL_ID=C...  # Channel ID for #ytho (starts with C)
+   
+   # Optional: Channel IDs for bot to join on startup (for testing/debugging)
+   # SLACK_MUSIC_CHANNEL_ID=C...
+   # SLACK_MAIN_CHANNEL_ID=C...
 
    # YouTube Configuration
    YOUTUBE_CLIENT_ID=your-client-id
@@ -50,6 +56,9 @@ A Slack bot that automatically adds YouTube videos to designated playlists based
 
    # MongoDB Configuration
    MONGODB_URI=your-mongodb-uri
+   
+   # Optional: Server Configuration
+   # PORT=3000
    ```
 
 4. Start the development server:
@@ -71,18 +80,28 @@ A Slack bot that automatically adds YouTube videos to designated playlists based
 
 ## Environment Variables
 
+### Required Variables
+
 | Variable | Description |
 |----------|-------------|
-| `SLACK_BOT_TOKEN` | Your Slack Bot User OAuth Token |
-| `SLACK_APP_TOKEN` | Your Slack App-Level Token with `connections:write` scope |
-| `SLACK_NOTIFICATION_CHANNEL_ID` | Channel ID where notifications will be posted |
+| `SLACK_BOT_TOKEN` | Your Slack Bot User OAuth Token (starts with `xoxb-`) |
+| `SLACK_SIGNING_SECRET` | Your Slack App's Signing Secret (found in Basic Information) |
+| `SLACK_APP_TOKEN` | Your Slack App-Level Token with `connections:write` scope (starts with `xapp-`) |
+| `SLACK_NOTIFICATION_CHANNEL_ID` | Channel ID where notifications will be posted (starts with `C`) |
 | `YOUTUBE_CLIENT_ID` | Google Cloud OAuth 2.0 Client ID |
 | `YOUTUBE_CLIENT_SECRET` | Google Cloud OAuth 2.0 Client Secret |
 | `YOUTUBE_REFRESH_TOKEN` | OAuth 2.0 Refresh Token for YouTube API |
 | `YOUTUBE_PLAYLIST_ID` | ID of the main playlist (Aucklandia) |
 | `YOUTUBE_MUSIC_PLAYLIST_ID` | ID of the music playlist (Aucklandia Music) |
 | `MONGODB_URI` | MongoDB connection string |
-| `PORT` | Port to run the server on (default: 3000) |
+
+### Optional Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SLACK_MUSIC_CHANNEL_ID` | Channel ID for music channel (used for bot to join on startup) | - |
+| `SLACK_MAIN_CHANNEL_ID` | Channel ID for main channel (used for bot to join on startup) | - |
+| `PORT` | Port to run the server on | `3000` |
 
 ## Contributing
 
