@@ -6,6 +6,21 @@ let youtubeClient = null;
 // Setup YouTube client
 async function setupYouTubeClient() {
   try {
+    // Validate required environment variables
+    if (!process.env.YOUTUBE_CLIENT_ID) {
+      throw new Error('YOUTUBE_CLIENT_ID is not set in environment variables');
+    }
+    if (!process.env.YOUTUBE_CLIENT_SECRET) {
+      throw new Error('YOUTUBE_CLIENT_SECRET is not set in environment variables');
+    }
+    if (!process.env.YOUTUBE_REFRESH_TOKEN) {
+      throw new Error('YOUTUBE_REFRESH_TOKEN is not set in environment variables');
+    }
+
+    // Log partial client ID for verification (first 10 chars only for security)
+    console.log('YouTube Client ID:', process.env.YOUTUBE_CLIENT_ID.substring(0, 20) + '...');
+    console.log('YouTube Refresh Token:', process.env.YOUTUBE_REFRESH_TOKEN.substring(0, 20) + '...');
+
     const oauth2Client = new OAuth2Client(
       process.env.YOUTUBE_CLIENT_ID,
       process.env.YOUTUBE_CLIENT_SECRET,
@@ -21,7 +36,7 @@ async function setupYouTubeClient() {
       auth: oauth2Client
     });
 
-    console.log('YouTube client initialized');
+    console.log('YouTube client initialized successfully');
   } catch (error) {
     console.error('Error initializing YouTube client:', error.message);
     throw error;
