@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  ytho:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ytho
+    restart: unless-stopped
+    env_file:
+      - .env
+    # No ports needed since it's using Socket Mode (not HTTP webhooks)
+    # Socket Mode connects via WebSocket, not HTTP
+    # Optional: Add resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    # Optional: Add logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

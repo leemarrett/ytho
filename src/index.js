@@ -44,20 +44,20 @@ const app = new App({
       console.error('Error getting bot info:', error.message);
     }
 
-    // Check channel connections
+    // Check channel connections (optional - bot can be manually invited to channels)
     const channels = [
       process.env.SLACK_MUSIC_CHANNEL_ID,
       process.env.SLACK_MAIN_CHANNEL_ID
     ].filter(Boolean);
 
     if (channels.length === 0) {
-      console.error('No channel IDs found in environment variables. Please set SLACK_MUSIC_CHANNEL_ID and/or SLACK_MAIN_CHANNEL_ID');
-      return;
-    }
+      console.log('No channel IDs configured in environment variables.');
+      console.log('Bot will work in channels where it has been manually invited.');
+      console.log('To auto-join channels on startup, set SLACK_MUSIC_CHANNEL_ID and/or SLACK_MAIN_CHANNEL_ID');
+    } else {
+      console.log('Attempting to connect to channels:', channels);
 
-    console.log('Attempting to connect to channels:', channels);
-
-    for (const channel of channels) {
+      for (const channel of channels) {
       try {
         // First try to get channel info
         const result = await client.conversations.info({ channel });
@@ -89,6 +89,7 @@ const app = new App({
           console.log('Bot needs to be invited to the channel. Please use /invite @ytho in the channel.');
         }
       }
+    }
     }
 
   } catch (error) {
