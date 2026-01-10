@@ -5,6 +5,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Uncomment the line below to force rebuild without cache
+      # Use this when code changes aren't being picked up
+      # args:
+      #   CACHE_BUST: ${CACHE_BUST:-$(date +%s)}
     container_name: ytho
     restart: unless-stopped
     # Environment variables can be set via env_file or environment section

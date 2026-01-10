@@ -11,7 +11,8 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 # Copy application code
-COPY . .
+# Using --chown here ensures files are owned by nodejs user
+COPY --chown=nodejs:nodejs . .
 
 # Create a non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
