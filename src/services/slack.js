@@ -171,15 +171,19 @@ async function setupSlackBot(app) {
         const videoDetails = await processYouTubeLink(url, videoId, message.user, channelName);
         if (videoDetails) {
           try {
+            // Use different emoji based on playlist type
+            const isMusicPlaylist = videoDetails.playlistId === process.env.YOUTUBE_MUSIC_PLAYLIST_ID;
+            const emoji = isMusicPlaylist ? '🎵' : '🎥';
+            
             await client.chat.postMessage({
               channel: process.env.SLACK_NOTIFICATION_CHANNEL_ID,
-              text: `🎥 New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`,
+              text: `${emoji} New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`,
               blocks: [
                 {
                   type: 'section',
                   text: {
                     type: 'mrkdwn',
-                    text: `🎥 New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`
+                    text: `${emoji} New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`
                   }
                 }
               ]
