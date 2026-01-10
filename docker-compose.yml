@@ -7,8 +7,15 @@ services:
       dockerfile: Dockerfile
     container_name: ytho
     restart: unless-stopped
+    # Environment variables can be set via env_file or environment section
+    # Dockge can also manage env vars through its UI
     env_file:
       - .env
+    # Alternative: If .env file doesn't exist, set vars directly here or via Dockge UI
+    # environment:
+    #   - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+    #   - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+    #   ... (etc)
     # No ports needed since it's using Socket Mode (not HTTP webhooks)
     # Socket Mode connects via WebSocket, not HTTP
     # Optional: Add resource limits
