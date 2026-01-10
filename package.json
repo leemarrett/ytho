@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "get-token": "node scripts/get-refresh-token.js"
   },
   "dependencies": {
     "@slack/bolt": "^3.17.1",
