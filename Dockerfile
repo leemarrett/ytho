@@ -12,6 +12,9 @@ RUN npm ci --only=production
 
 # Copy application code
 # Using --chown here ensures files are owned by nodejs user
+# Note: Adding a cache-busting timestamp via build arg helps force rebuilds when code changes
+ARG BUILD_DATE=unknown
+LABEL build_date=$BUILD_DATE
 COPY --chown=nodejs:nodejs . .
 
 # Create a non-root user for security
