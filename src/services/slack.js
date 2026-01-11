@@ -175,15 +175,32 @@ async function setupSlackBot(app) {
             const isMusicPlaylist = videoDetails.playlistId === process.env.YOUTUBE_MUSIC_PLAYLIST_ID;
             const emoji = isMusicPlaylist ? '🎵' : '🎥';
             
+            // Get permalink to original message
+            let permalinkText = '';
+            try {
+              const permalink = await client.chat.getPermalink({
+                channel: message.channel,
+                message_ts: message.ts
+              });
+              if (permalink.permalink) {
+                permalinkText = `\n(from <${permalink.permalink}|this post>)`;
+              }
+            } catch (permalinkError) {
+              console.log('Could not get permalink for message:', permalinkError.message);
+              // Continue without permalink if it fails
+            }
+            
+            const notificationText = `${emoji} New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!${permalinkText}\n\n*${videoDetails.title}*\n${url}`;
+            
             await client.chat.postMessage({
               channel: process.env.SLACK_NOTIFICATION_CHANNEL_ID,
-              text: `${emoji} New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`,
+              text: notificationText,
               blocks: [
                 {
                   type: 'section',
                   text: {
                     type: 'mrkdwn',
-                    text: `${emoji} New YouTube video added to the ${getPlaylistName(videoDetails.playlistId)} playlist!\n\n*${videoDetails.title}*\n${url}`
+                    text: notificationText
                   }
                 }
               ]
