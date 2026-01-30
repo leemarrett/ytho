@@ -195,6 +195,8 @@ async function setupSlackBot(app) {
             await client.chat.postMessage({
               channel: process.env.SLACK_NOTIFICATION_CHANNEL_ID,
               text: notificationText,
+              unfurl_links: false,  // Don't unfurl "(from this post)" link — avoids duplicate YouTube preview
+              unfurl_media: true,   // Keep YouTube video preview
               blocks: [
                 {
                   type: 'section',
