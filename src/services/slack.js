@@ -137,14 +137,18 @@ async function setupSlackBot(app) {
     console.log('Bot token prefix:', process.env.SLACK_BOT_TOKEN?.substring(0, 10) + '...');
     
     try {
-      // Skip messages from bots and message edits
-      if (message.subtype === 'bot_message' || message.subtype === 'message_changed') {
-        console.log('Skipping bot message or message edit');
+      // Skip messages from bots
+      if (message.subtype === 'bot_message') {
+        console.log('Skipping bot message');
         return;
       }
 
-      // Find YouTube links in message
-      const text = message.text;
+      // For edited messages, the content is nested under message.message
+      const isEdit = message.subtype === 'message_changed';
+      const text = isEdit ? message.message?.text : message.text;
+      const user = isEdit ? message.message?.user : message.user;
+      const ts = isEdit ? message.message?.ts : message.ts;
+
       if (!text) {
         console.log('No text in message');
         return;
@@ -173,7 +177,7 @@ async function setupSlackBot(app) {
         }
 
         console.log('Extracted video ID:', videoId);
-        const videoDetails = await processYouTubeLink(url, videoId, message.user, channelName);
+        const videoDetails = await processYouTubeLink(url, videoId, user, channelName);
         if (videoDetails) {
           try {
             // Use different emoji based on playlist type
@@ -185,7 +189,7 @@ async function setupSlackBot(app) {
             try {
               const permalink = await client.chat.getPermalink({
                 channel: message.channel,
-                message_ts: message.ts
+                message_ts: ts
               });
               if (permalink.permalink) {
                 permalinkText = `\n(from <${permalink.permalink}|this post>)`;
