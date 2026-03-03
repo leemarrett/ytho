@@ -2,21 +2,26 @@ const { ProcessedLink, Video } = require('./database');
 const { checkVideoExists, getVideoDetails, addVideoToPlaylist, getPlaylistName, setupYouTubeClient } = require('./youtube');
 
 // YouTube URL patterns
+// [^&\n?|>]+ stops at & ? newline, and at | or > (Slack link format: <url|display text>)
 const YOUTUBE_PATTERNS = [
-  /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|music\.youtube\.com\/watch\?v=)([^&\n?]+)/,
+  /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|music\.youtube\.com\/watch\?v=)([^&\n?|>]+)/,
 ];
 
 // YouTube URL regex pattern
 const YOUTUBE_URL_PATTERN = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
-// Extract video ID from URL
+// Extract video ID from URL (YouTube IDs are always 11 characters)
 function extractVideoId(url) {
   // Remove any angle brackets from the URL
   url = url.replace(/[<>]/g, '');
   
   for (const pattern of YOUTUBE_PATTERNS) {
     const match = url.match(pattern);
-    if (match) return match[1];
+    if (match) {
+      const id = match[1];
+      // Slack link format <url|text> can leave trailing junk; take only the 11-char ID
+      return id.length > 11 ? id.substring(0, 11) : id;
+    }
   }
   return null;
 }
